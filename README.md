@@ -2,6 +2,9 @@
 
 Stream a USB ultrasound probe into ROS 2 with GPU-accelerated H.264 video, a local preview, and automatic reconnection.
 
+<p align="center">
+<img src="assets/example.gif" width="480" alt="Example ultrasound preview">
+</p>
 Built for **ROS 2 Humble** and **V4L2 devices**, `ultrasound_usb` publishes compressed video through `image_transport` and `ffmpeg_image_transport`, ready for viewing or recording with rosbag.
 
 - **Full HD capture:** 1920 × 1080 at a requested 30 FPS.
@@ -69,21 +72,21 @@ Use the launch file to load the encoder settings and enable automatic restart. T
 
 The included configuration uses:
 
-| Setting | Value | Purpose |
-| --- | --- | --- |
-| `device` | `/dev/video12` | V4L2 capture device |
-| `image_topic` | `/ultrasound_image` | Base topic; compressed packets appear under `/ffmpeg` |
-| `width`, `height` | `1920`, `1080` | Capture and encoding resolution |
-| `fps` | `30.0` | Requested capture frame rate |
-| `fourcc` | `YUYV` | USB pixel format |
-| `frame_id` | `probe` | ROS header frame |
-| `preview` | `true` | Local preview |
-| `monochrome` | `false` | Convert to grayscale before encoding |
-| `reconnect_interval` | `2.0` | Seconds between capture retries |
-| `capture_timeout` | `15.0` | Seconds without progress before watchdog termination; allowed range: 1–3600 |
-| `ultrasound_image.ffmpeg.encoder` | `h264_nvenc` | NVIDIA H.264 encoder |
-| `ultrasound_image.ffmpeg.bit_rate` | `12000000` | Target bitrate in bit/s |
-| `ultrasound_image.ffmpeg.gop_size` | `30` | Frames between keyframes |
+| Setting                            | Value               | Purpose                                                                     |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------------------- |
+| `device`                           | `/dev/video12`      | V4L2 capture device                                                         |
+| `image_topic`                      | `/ultrasound_image` | Base topic; compressed packets appear under `/ffmpeg`                       |
+| `width`, `height`                  | `1920`, `1080`      | Capture and encoding resolution                                             |
+| `fps`                              | `30.0`              | Requested capture frame rate                                                |
+| `fourcc`                           | `YUYV`              | USB pixel format                                                            |
+| `frame_id`                         | `probe`             | ROS header frame                                                            |
+| `preview`                          | `true`              | Local preview                                                               |
+| `monochrome`                       | `false`             | Convert to grayscale before encoding                                        |
+| `reconnect_interval`               | `2.0`               | Seconds between capture retries                                             |
+| `capture_timeout`                  | `15.0`              | Seconds without progress before watchdog termination; allowed range: 1–3600 |
+| `ultrasound_image.ffmpeg.encoder`  | `h264_nvenc`        | NVIDIA H.264 encoder                                                        |
+| `ultrasound_image.ffmpeg.bit_rate` | `12000000`          | Target bitrate in bit/s                                                     |
+| `ultrasound_image.ffmpeg.gop_size` | `30`                | Frames between keyframes                                                    |
 
 The encoder uses VBR, preset `p5`, quality target `cq:16`, no B-frames, and no lookahead. H.264 is lossy, and the target bitrate is not a fixed network bandwidth limit.
 
@@ -91,22 +94,6 @@ If you change `image_topic` or add a namespace, update the `ultrasound_image` pl
 
 ROS headers accompany each packet. Timestamps are taken after capture, rather than from the device hardware. The node does not publish `CameraInfo` or TF.
 
-## Reconnection
-
-Failed capture attempts retry every 2 seconds. If capture, device opening, or publication stops progressing for 15 seconds, the watchdog terminates the process. The launch file restarts it after 2 seconds; running the node with `ros2 run` does not provide this restart behavior.
-
-For reliable device identification after unplugging the probe, prefer a stable device link:
-
-```bash
-ls -l /dev/v4l/by-id/ /dev/v4l/by-path/
-ros2 launch ultrasound_usb ultrasound.launch.py device:=/dev/v4l/by-id/YOUR_PROBE-video-index0
-```
-
-Choose the correct video interface. A `by-path` link identifies the USB port and is useful for probes without a serial number. The sysfs fallback also follows the port, so reconnect the probe to the same USB port.
-
-Without a stable link or readable sysfs identity, the node can only retry the configured path. If it starts with a missing `/dev/videoN`, it must first see the probe at that path to learn its identity.
-
-Frames are lost during disconnection. Publication resumes on the same topic when the probe returns. Keep rosbag running: the node does not manage or restart the recorder.
 
 ## Troubleshooting
 
