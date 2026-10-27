@@ -1,0 +1,21 @@
+ultrasound_usb:
+  ros__parameters:
+    device: /dev/video12
+    image_topic: /ultrasound_image
+    frame_id: probe
+    width: 1920
+    height: 1080
+    fps: 30.0
+    fourcc: "YUYV"
+    monochrome: false
+    preview: true
+    reconnect_interval: 2.0
+    capture_timeout: 15.0
+    # Keep this prefix aligned with image_topic (slashes become dots).
+    ultrasound_image.enable_pub_plugins: ["image_transport/ffmpeg"]
+    ultrasound_image.ffmpeg.encoder: h264_nvenc
+    ultrasound_image.ffmpeg.bit_rate: 12000000
+    ultrasound_image.ffmpeg.gop_size: 30
+    ultrasound_image.ffmpeg.max_b_frames: 0
+    ultrasound_image.ffmpeg.pixel_format: yuv420p
+    ultrasound_image.ffmpeg.encoder_av_options: "preset:p5,rc:vbr,cq:16,rc-lookahead:0,bf:0"
